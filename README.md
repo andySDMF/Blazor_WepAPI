@@ -1,5 +1,14 @@
 # Blazor App & WebAPI
 
+# Installed Nuget Packages
+
+- EntityFrameworkCore.SQLServer
+- EntityFrameworkCore.Tools
+
+# Overveiw
+
+Low-level application testing Blazor component driven Web Apps + ASP.NET WebAPI using the Entity Framework. The CSS mostly comes from Bootstrap v5.3.
+
 # Setup
 
 You will need to setup an SQLServer database.
