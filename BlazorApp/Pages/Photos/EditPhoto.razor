@@ -1,0 +1,224 @@
+﻿@page "/Photos/EditPhoto/{Id:int}"
+@using System.Text.Json.Nodes
+
+@inject HttpClient http
+@inject NavigationManager nav
+@inject IJSRuntime JSRuntime
+
+<PageTitle>EditPhoto</PageTitle>
+@if (photoCategories == null)
+{
+	<p><em>Checking categories...</em></p>
+}
+else if(photoCategories.Count <= 0)
+{
+	<p><em>Cannot create new photo. Please add a new category</em></p>
+}
+else
+{
+	<div class="row mb-5">
+		<div class="col-lg-8">
+			<h1 class="mb-5">Edit Photo</h1>
+
+			@if (photoData == null)
+			{
+				<p><em>Loading...</em></p>
+			}
+			else
+			{
+				<div class="row mb-3">
+					<label class="col-md-4 col-form-label">Title</label>
+					<div class="col-md-8">
+						<input class="form-control" @bind="PhotoDtoData.Title">
+						<span class="text-danger">@Errors["Title"]?[0]</span>
+					</div>
+				</div>
+
+				<div class="row mb-3">
+					<label class="col-md-4 col-form-label">Description</label>
+					<div class="col-md-8">
+						<textarea class="form-control" @bind="PhotoDtoData.Description"></textarea>
+						<span class="text-danger">@Errors["Description"]?[0]</span>
+					</div>
+				</div>
+
+				<div class="row mb-3">
+					<label class="col-md-4 col-form-label">Image</label>
+					<div class="col-md-8">
+						<div class="btn-group col-md-4 d-grid">
+							<button type="button" class="btn btn-outline-secondary dropdown-toggle text-end" data-bs-toggle="dropdown" aria-expanded="false">
+								@selectedImage
+							</button>
+							<ul class="dropdown-menu w-100">
+								@foreach (string str in images)
+								{
+									<li><a class="dropdown-item w-100 text-end" @onclick="async () => await OnImageChanged(str)">@str</a></li>
+								}
+							</ul>
+						</div>
+						<!-- <textarea class ="form-control" @bind="PhotoDtoData.ImageUrl"></textarea>
+						<span class="text-danger">@Errors["ImageUrl"]?[0]</span>-->
+					</div>
+				</div>
+
+				<div class="row mb-3">
+					<label class="col-md-4 col-form-label">Category</label>
+					<div class="col-md-8">
+						<div class="btn-group col-md-4 d-grid">
+							<button type="button" class="btn btn-outline-secondary dropdown-toggle text-end" data-bs-toggle="dropdown" aria-expanded="false">
+								@selectedCategory?.Name
+							</button>
+							<ul class="dropdown-menu w-100">
+								@foreach (PhotoCategory cat in photoCategories)
+								{
+									<li><a class="dropdown-item w-100 text-end" @onclick="async () => await OnCategoryChanged(cat)">@cat.Name</a></li>
+								}
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<div class="row mb-3">
+					<div class="offset-md-4 col-md-4 d-grid">
+						<button class="btn btn-primary" @onclick="SavePhoto">Save</button>
+					</div>
+					<div class="col-md-4 d-grid">
+						<button class="btn btn-outline-primary" @onclick="CancelEdit">Cancel</button>
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+}
+
+
+@code {
+
+	[Parameter]
+	public int Id { get; set; }
+
+	public Photo? photoData = null;
+	public PhotoDto PhotoDtoData { get; set; } = new();
+	public JsonNode Errors { get; set; } = new JsonObject();
+
+	private List<PhotoCategory>? photoCategories;
+	private List<string> images = new List<string>();
+
+	private string selectedImage = "Butterfly";
+	private string invalidCategory = "";
+
+	private PhotoCategory? selectedCategory;
+
+	protected override async Task OnInitializedAsync()
+	{
+		photoCategories = await http.GetFromJsonAsync<List<PhotoCategory>>("api/PhotoCategory");
+
+
+		images = new List<string>()
+		{
+			"Butterfly",
+			"Dog",
+			"Flower",
+			"Mountains",
+			"Tiger",
+			"Water"
+		};
+	}
+
+	protected override async Task OnParametersSetAsync()
+	{
+		try
+		{
+			photoData = await http.GetFromJsonAsync<Photo>("api/Photo/" + Id);
+			PhotoDtoData.Title = photoData?.Title ?? "";
+			PhotoDtoData.Description = photoData?.Description ?? "";
+			PhotoDtoData.ImageUrl = photoData?.ImageUrl ?? "";
+			PhotoDtoData.CategoryId = photoData?.CategoryId ?? -1;
+
+			selectedCategory = photoData?.Category;
+
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine("Exception : " + ex.Message);
+		}
+	}
+
+	private async Task SavePhoto()
+	{
+		invalidCategory = "";
+		PhotoDtoData.ImageUrl = "/images/" + selectedImage + ".jpg";
+		PhotoDtoData.CategoryId = selectedCategory?.Id ?? -1;
+
+		var response = await http.PutAsJsonAsync("api/Photo/" + Id, PhotoDtoData);
+
+		if (response.IsSuccessStatusCode)
+		{
+			nav.NavigateTo("/Photos");
+		}
+		else
+		{
+			var strResponse = await response.Content.ReadAsStringAsync();
+			Console.WriteLine("Json Response \n" + strResponse);
+
+			if (strResponse == "400")
+			{
+				invalidCategory = "Invalid category ID";
+			}
+			else
+			{
+
+				try
+				{
+					var jsonResponse = JsonNode.Parse(strResponse);
+					Errors = jsonResponse?["errors"] ?? new JsonObject();
+				}
+				catch (Exception ex)
+				{
+
+				}
+			}
+		}
+	}
+
+
+	private async Task CancelEdit()
+	{
+		if (CheckValuesHaveChanged())
+		{
+			if (!await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to leave page with pending changes?"))
+			{
+				return;
+			}
+		}
+
+		nav.NavigateTo("/Photos");
+	}
+
+	private bool CheckValuesHaveChanged()
+	{
+		if (photoData?.Title != PhotoDtoData.Title || photoData?.Description != PhotoDtoData.Description
+		|| photoData?.ImageUrl != PhotoDtoData.ImageUrl || photoData?.CategoryId != PhotoDtoData.CategoryId)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	private async Task OnImageChanged(string image)
+	{
+		selectedImage = image;
+		PhotoDtoData.ImageUrl = "/images/" + selectedImage + ".jpg";
+
+		await Task.Delay(1);
+	}
+
+	private async Task OnCategoryChanged(PhotoCategory categroy)
+	{
+		selectedCategory = categroy;
+		PhotoDtoData.CategoryId = selectedCategory?.Id ?? -1;
+
+		await Task.Delay(1);
+	}
+}

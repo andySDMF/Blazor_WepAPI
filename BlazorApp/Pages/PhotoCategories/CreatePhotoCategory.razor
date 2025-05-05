@@ -1,0 +1,73 @@
+﻿@page "/PhotoCategories/CreatePhotoCategory"
+@using System.Text.Json.Nodes
+
+@inject HttpClient http
+@inject NavigationManager nav
+
+<PageTitle>CreatePhotoCategory</PageTitle>
+
+<div class="row mb-5">
+	<div class="col-lg-8">
+		<h1 class="mb-5">New Photo Category</h1>
+
+		<div class="row mb-3">
+			<label class="col-md-4 col-form-label">Name</label>
+			<div class="col-md-8">
+				<input class="form-control" @bind="CategoryDtoData.Name">
+				<span class="text-danger">@Errors["Name"]?[0]</span>
+				<span class="text-danger">@identicalValues</span>
+			</div>
+		</div>
+		<div class="row mb-3">
+			<div class="offset-md-4 col-md-4 d-grid">
+				<button class="btn btn-primary" @onclick="SaveCategory">Save</button>
+			</div>
+			<div class="col-md-4 d-grid">
+				<a class="btn btn-outline-primary" href="/PhotoCategories">Cancel</a>
+			</div>
+		</div>
+	</div>
+</div>
+
+@code {
+
+	public PhotoCategoryDto CategoryDtoData { get; set; } = new();
+	public JsonNode Errors { get; set; } = new JsonObject();
+
+	private string identicalValues = "";
+
+	private async Task SaveCategory()
+	{
+		identicalValues = "";
+
+		var response = await http.PostAsJsonAsync("api/PhotoCategory", CategoryDtoData);
+
+		if(response.IsSuccessStatusCode)
+		{
+			nav.NavigateTo("/PhotoCategories");
+		}
+		else
+		{
+			var strResponse = await response.Content.ReadAsStringAsync();
+			Console.WriteLine("Json Response \n" + strResponse);
+
+			if(strResponse == "400")
+			{
+				identicalValues = "Category with the same name exists";
+			}
+			else
+			{
+				try
+				{
+					var jsonResponse = JsonNode.Parse(strResponse);
+					Errors = jsonResponse?["errors"] ?? new JsonObject();
+
+				}
+				catch (Exception ex)
+				{
+
+				}
+			}
+		}
+	}
+}

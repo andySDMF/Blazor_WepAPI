@@ -1,0 +1,116 @@
+﻿@page "/PhotoGallery"
+@inject HttpClient http
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
+
+<PageTitle>PhotoGallery</PageTitle>
+
+<h1>Photo Gallery</h1>
+
+@if (photos == null && Categories == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	@if (photos == null)
+	{
+		<p><em>Loading...</em></p>
+	}
+	else
+	{
+		<a class="btn btn-primary mb-3 me-2" @onclick="RefeshGallery">Refresh</a>
+		<br/>
+
+		<nav>
+			<div class="nav nav-tabs" id="nav-tab" role="tablist">
+				<button class="nav-link active" id="nav-all-tab" data-bs-toggle="tab" data-bs-target="#nav-all" type="button" role="tab" aria-controls="nav-all" aria-selected="true">All</button>
+
+				@foreach (var cat in Categories)
+				{
+					<button class="nav-link" id="nav-@cat.Name.Replace(" ", "-")-tab" data-bs-toggle="tab" data-bs-target="#nav-@cat.Name.Replace(" ", "-")" type="button" role="tab" aria-controls="nav-@cat.Name.Replace(" ", "-")" aria-selected="false">@cat.Name</button>
+				}
+
+			</div>
+		</nav>
+		<div class="tab-content" id="nav-tabContent">
+			<div class="tab-pane fade show active" id="nav-all" role="tabpanel" aria-labelledby="nav-all-tab" tabindex="0">
+
+				<div class="container">
+					<div class="row">
+						@foreach (var img in photos)
+						{
+							<div class="card m-2" style="width: 18rem;">
+								<h3>@img.Title</h3>
+								<img src="@img.ImageUrl" class="card-img-top" alt="@img.Title">
+								<div class="card-body">
+									<p class="card-text">@img.Description</p>
+								</div>
+							</div>
+
+							<!--<div class="col-md-6">
+								<div class="m-2 border border-primary-subtle bg-light rounded border-1 p-3">
+									<h3>@img.Title</h3>
+									<img class="img-thumbnail" src="@img.ImageUrl" alt="Test" />
+									<h6>@img.Description</h6>
+								</div>
+							</div>-->
+						}
+					</div>
+				</div>
+
+			</div>
+
+			@foreach (var cat in Categories)
+			{
+				<div class="tab-pane fade" id="nav-@cat.Name.Replace(" ", "-")" role="tabpanel" aria-labelledby="nav-@cat.Name.Replace(" ", "-")-tab" tabindex="0">
+
+					<div class="container">
+						<div class="row">
+							@foreach (var img in photos)
+							{
+								@if (img.CategoryId.Equals(cat.Id))
+								{
+									<div class="card m-2" style="width: 18rem;">
+										<h3>@img.Title</h3>
+										<img src="@img.ImageUrl" class="card-img-top" alt="@img.Title">
+										<div class="card-body">
+											<p class="card-text">@img.Description</p>
+										</div>
+									</div>
+								}
+							}
+						</div>
+					</div>
+				</div>
+			}
+
+		</div>
+	}
+}
+
+@code {
+
+	private List<Photo>? photos;
+	private List<PhotoCategory>? Categories;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await RefeshGallery();
+	}
+
+	private void ChangeCategory(int categoryID)
+	{
+		Console.WriteLine($"Clicked ' {categoryID} ' ");
+	}
+
+	private async Task RefeshGallery()
+	{
+		photos = null;
+		Categories = null;
+
+		photos = await http.GetFromJsonAsync<List<Photo>>("api/Photo");
+
+		Categories = await http.GetFromJsonAsync<List<PhotoCategory>>("api/PhotoCategory");
+	}
+}

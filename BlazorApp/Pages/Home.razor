@@ -1,0 +1,103 @@
+﻿@page "/"
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
+
+<PageTitle>Home</PageTitle>
+
+<h1>Home</h1>
+
+<div class="pt-3">
+    <h6>CSS style comes from Bootstrap v5.3.</h6>
+</div>
+
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery-tab-pane" type="button" role="tab" aria-controls="gallery-tab-pane" aria-selected="true">Gallery</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories-tab-pane" type="button" role="tab" aria-controls="categories-tab-pane" aria-selected="false">Categories</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos-tab-pane" type="button" role="tab" aria-controls="photos-tab-pane" aria-selected="false">Photos</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events-tab-pane" type="button" role="tab" aria-controls="events-tab-pane" aria-selected="false">Events</button>
+    </li>
+</ul>
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="gallery-tab-pane" role="tabpanel" aria-labelledby="gallery-tab" tabindex="0">
+        
+        <div class="pt-3">
+            <h6>This is a demo to show a grid of photo cards that our stored within the SQLServer.</h6>
+        </div>
+
+        <div class="pt-3">
+            <h6>All photos are categorised and can be displayed by category</h6>
+        </div>
+
+        <div class="pt-3">
+            <h6>This Blazor component is all dynamucally created</h6>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="categories-tab-pane" role="tabpanel" aria-labelledby="categories-tab" tabindex="0">
+
+        <div class="pt-3">
+            <h6>This is a demo to manage the categories for Photos</h6>
+        </div>
+
+        <div class="pt-3">
+            <h6>All CRUD operations</h6>
+        </div>
+
+        <div class="pt-3">
+            <h6>Uses HTTP to send requests to the WebAPI</h6>
+        </div>
+
+    </div>
+
+    <div class="tab-pane fade" id="photos-tab-pane" role="tabpanel" aria-labelledby="photos-tab" tabindex="0">
+
+        <div class="pt-3">
+            <h6>This is a demo to manage the photos that will be displayed in the gallery. 
+                The Photo model has a one-to-many relationship with the categories.</h6>
+        </div>
+
+        <div class="pt-3">
+            <img src="/images/misc/ERDiagram.jpg" alt="ER Diagram">
+        </div>
+
+        <div class="pt-3">
+            <h6>All CRUD operations</h6>
+        </div>
+
+        <div class="pt-3">
+            <h6>Uses HTTP to send requests to the WebAPI</h6>
+        </div>
+
+    </div>
+
+    <div class="tab-pane fade" id="events-tab-pane" role="tabpanel" aria-labelledby="events-tab" tabindex="0">
+
+        <div class="pt-3">
+            <h6>This is a demo to manage events</h6>
+        </div>
+
+        <div class="pt-3">
+            <h6>All CRUD operations</h6>
+        </div>
+
+        <div class="pt-3">
+            <h6>Uses HTTP to send requests to the WebAPI</h6>
+        </div>
+
+    </div>
+</div>
+
+@code {
+
+}
+
+
+
+

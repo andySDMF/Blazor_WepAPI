@@ -1,0 +1,77 @@
+﻿@page "/Photos"
+@inject HttpClient http
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Photos</PageTitle>
+
+<h1>Photos</h1>
+
+@if (photos == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<a class="btn btn-primary mb-3 me-2" href="/Photos/CreatePhoto">Add Photo</a>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Title</th>
+				<th>Description</th>
+				<th width ="300px">URL</th>
+				<th>Category</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var img in photos)
+			{
+				<tr>
+					<td>@img.Id</td>
+					<td>@img.Title</td>
+					<td>@img.Description</td>
+					<td width="300px">@img.ImageUrl</td>
+					<td>@img.Category.Name</td>
+					<td style="white-space:nowrap; width:10px">
+						<a class="btn btn-primary btn-sm" href="/Photos/EditPhoto/@img.Id">Edit</a>
+						<button class="btn btn-danger btn-sm" @onclick="async () => await DeletePhoto(img)">Delete</button>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+
+	private List<Photo>? photos;
+
+	protected override async Task OnInitializedAsync()
+	{
+		photos = await http.GetFromJsonAsync<List<Photo>>("api/Photo");
+	}
+
+	private async Task DeletePhoto(Photo img)
+	{
+		if (!await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete photo '{img.Title}' ?"))
+		{
+			return;
+		}
+
+		var response = await http.DeleteAsync("api/Photo/" + img.Id);
+
+		if (response.IsSuccessStatusCode)
+		{
+			photos = await http.GetFromJsonAsync<List<Photo>>("api/Photo");
+		}
+		else
+		{
+			if (!await JSRuntime.InvokeAsync<bool>("alert", $"Cannot delete photo '{img.Title}'!"))
+			{
+				return;
+			}
+		}
+	}
+}

@@ -1,0 +1,19 @@
+﻿@page "/AlpineFormulaOne"
+@inject IJSRuntime JSRuntime
+
+<PageTitle>AlpineFormulaOne</PageTitle>
+
+<h1>Alpine F1</h1>
+
+<!-- NOTE: THREE>JS -->
+<canvas id="@canvasId" height="650"></canvas>
+
+@code {
+	const string canvasId = "canvas-id"; // NOTE: the ID of the canvas
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		object[] args = { canvasId };
+		await JSRuntime.InvokeVoidAsync("threeExample", args); // NOTE: call JavaScript function with the ID of the canvas
+	}
+}

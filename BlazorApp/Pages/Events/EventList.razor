@@ -1,0 +1,85 @@
+﻿@page "/Events"
+@inject HttpClient http
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Events</PageTitle>
+
+<h1>Events</h1>
+
+@if (events == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<a class="btn btn-primary mb-3 me-2" href="/Events/CreateEvent">Add Event</a>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Name</th>
+				<th>Description</th>
+				<th>Date</th>
+				<th>All Day</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var evt in events)
+			{
+				<tr>
+					<td>@evt.Id</td>
+					<td>@evt.Name</td>
+					<td>@evt.Description</td>
+					<td>@evt.Start.ToShortDateString()</td>
+					<td>
+						@if(evt.AllDay)
+						{
+							<span class="badge rounded-pill text-bg-success">Yes</span>
+						}
+						else
+						{
+							<span class="badge rounded-pill text-bg-warning">No</span>
+						}
+					</td>
+					<td style="white-space:nowrap; width:10px">
+						<a class="btn btn-primary btn-sm" href="/Events/EditEvent/@evt.Id">Edit</a>
+						<button class="btn btn-danger btn-sm" @onclick="async () => await DeleteEvent(evt)">Delete</button>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+	private List<Event>? events;
+
+	protected override async Task OnInitializedAsync()
+	{
+		events = await http.GetFromJsonAsync<List<Event>> ("api/Events");
+	}
+
+	private async Task DeleteEvent(Event evt)
+	{
+		if (!await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete event '{evt.Name}' ?"))
+		{
+			return;
+		}
+
+		var response = await http.DeleteAsync("api/Events/" + evt.Id);
+
+		if(response.IsSuccessStatusCode)
+		{
+			events = await http.GetFromJsonAsync<List<Event>>("api/Events");
+		}
+		else
+		{
+			if (!await JSRuntime.InvokeAsync<bool>("alert", $"Cannot delete event '{evt.Name}'!"))
+			{
+				return;
+			}
+		}
+	}
+}

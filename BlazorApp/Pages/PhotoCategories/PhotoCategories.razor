@@ -1,0 +1,62 @@
+﻿@page "/PhotoCategories"
+@inject HttpClient http
+@inject IJSRuntime JSRuntime
+
+<PageTitle>PhotoCategories</PageTitle>
+
+<h1>Photo Categories</h1>
+
+@if (photoCategories == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<a class="btn btn-primary mb-3 me-2" href="/PhotoCategories/CreatePhotoCategory">Add Category</a>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Name</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var cat in photoCategories)
+			{
+				<tr>
+					<td>@cat.Id</td>
+					<td>@cat.Name</td>
+					<td style="white-space:nowrap; width:10px">
+						<a class="btn btn-primary btn-sm" href="/PhotoCategories/EditPhotoCategory/@cat.Id">Edit</a>
+						<button class="btn btn-danger btn-sm" @onclick="async () => await DeleteCategory(cat)">Delete</button>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+
+	private List<PhotoCategory>? photoCategories;
+
+	protected override async Task OnInitializedAsync()
+	{
+		photoCategories = await http.GetFromJsonAsync<List<PhotoCategory>>("api/PhotoCategory");
+	}
+
+	private async Task DeleteCategory(PhotoCategory cat)
+	{
+		if (!await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete category ' {cat.Name}' ?"))
+		{
+			return;
+		}
+
+		await http.DeleteAsync("api/PhotoCategory/" + cat.Id);
+
+
+		photoCategories = await http.GetFromJsonAsync<List<PhotoCategory>>("api/PhotoCategory");
+	}
+}

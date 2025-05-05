@@ -1,0 +1,129 @@
+﻿@page "/PhotoCategories/EditPhotoCategory/{Id:int}"
+@using System.Text.Json.Nodes
+
+@inject HttpClient http
+@inject NavigationManager nav
+@inject IJSRuntime JSRuntime
+
+<PageTitle>EditPhotoCategory</PageTitle>
+
+<div class="row mb-5">
+	<div class="col-lg-8">
+		<h1 class="mb-5">Edit Category</h1>
+
+		@if (categoryData == null)
+		{
+			<p><em>Loading...</em></p>
+		}
+		else
+		{
+			<div class="row mb-3">
+				<label class="col-md-4 col-form-label">Name</label>
+				<div class="col-md-8">
+					<input class="form-control-plaintext" readonly value="@Id">
+				</div>
+			</div>
+
+			<div class="row mb-3">
+				<label class="col-md-4 col-form-label">Name</label>
+				<div class="col-md-8">
+					<input class="form-control" @bind="CategoryDtoData.Name">
+					<span class="text-danger">@Errors["Name"]?[0]</span>
+					<span class="text-danger">@identicalValues</span>
+				</div>
+			</div>
+
+			<div class="row mb-3">
+				<div class="offset-md-4 col-md-4 d-grid">
+					<button class="btn btn-primary" @onclick="SaveCategory">Save</button>
+				</div>
+				<div class="col-md-4 d-grid">
+					<button class="btn btn-outline-primary" @onclick="CancelEdit">Cancel</button>
+				</div>
+			</div>
+		}
+	</div>
+</div>
+
+@code {
+	[Parameter]
+	public int Id { get; set; }
+
+	public PhotoCategory? categoryData = null;
+	public PhotoCategoryDto CategoryDtoData { get; set; } = new();
+	public JsonNode Errors { get; set; } = new JsonObject();
+
+	private string identicalValues = "";
+
+	protected override async Task OnParametersSetAsync()
+	{
+		try
+		{
+			categoryData = await http.GetFromJsonAsync<PhotoCategory>("api/PhotoCategory/" + Id);
+			CategoryDtoData.Name = categoryData?.Name ?? "";
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine("Exception : " + ex.Message);
+		}
+	}
+
+	private async Task SaveCategory()
+	{
+		identicalValues = "";
+
+		var response = await http.PutAsJsonAsync("api/PhotoCategory/" + Id, CategoryDtoData);
+
+		if (response.IsSuccessStatusCode)
+		{
+			nav.NavigateTo("/PhotoCategories");
+		}
+		else
+		{
+			var strResponse = await response.Content.ReadAsStringAsync();
+			Console.WriteLine("Json Response \n" + strResponse);
+
+			if (strResponse == "400")
+			{
+				identicalValues = "Category with the same name exists";
+			}
+			else
+			{
+
+				try
+				{
+					var jsonResponse = JsonNode.Parse(strResponse);
+					Errors = jsonResponse?["errors"] ?? new JsonObject();
+				}
+				catch (Exception ex)
+				{
+
+				}
+			}
+		}
+	}
+
+
+	private async Task CancelEdit()
+	{
+		if (CheckValuesHaveChanged())
+		{
+			if (!await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to leave page with pending changes?"))
+			{
+				return;
+			}
+		}
+
+		nav.NavigateTo("/PhotoCategories");
+	}
+
+	private bool CheckValuesHaveChanged()
+	{
+		if (categoryData?.Name != CategoryDtoData.Name)
+		{
+			return true;
+		}
+
+		return false;
+	}
+}
